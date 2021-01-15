@@ -1,24 +1,19 @@
-import React from 'react'
+import React from 'react';
 
-const Detail = ({album, artists, name}) => {
-
-  return (
-    <div>
-      <div>
-        <img src={album.images[0].url} alt={name} />
-      </div>
-      <div>
-        <label htmlFor={name}>
-          {name}
-        </label>
-      </div>
-      <div>
-        <label htmlFor={artists[0].name}>
-        {artists[0].name}
-        </label>
-      </div>
+const Detail = ({ album, artists, name }) => (
+  <div className="offset-md-1 col-sm-4">
+    <div className="row col-sm-12 px-0">
+      <img height="348px" src={album.images[0].url} alt={name} />
     </div>
-  );
-}
 
-export default Detail
+    <label style={{ textAlign: 'center' }} htmlFor={name}>
+      {name}
+    </label>
+
+    <label className="form-label col-sm-12" htmlFor={artists[0].name}>
+      {artists[0].name}
+    </label>
+  </div>
+);
+
+export default Detail;

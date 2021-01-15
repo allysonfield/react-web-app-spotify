@@ -1,0 +1,6 @@
+{
+  "singleQuote": true,
+  "trailingComa": "all",
+  "jsxBracketSameLine": true,
+  "bracketSpacing": true
+}
