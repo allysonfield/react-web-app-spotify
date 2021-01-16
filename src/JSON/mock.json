@@ -1,0 +1,38 @@
+[
+  {
+    "value": "en_AU",
+    "name": "en_AU",
+    "country": "Australia",
+    "code": "AU"
+  },
+  {
+    "value": "de_DE",
+    "name": "de_DE",
+    "country": "Djibouti",
+    "code": "DE"
+  },
+  {
+    "value": "pt_BR",
+    "name": "pt_BR",
+    "country": "Brasil",
+    "code": "BR"
+  },
+  {
+    "value": "fr_FR",
+    "name": "fr_FR",
+    "country": "França",
+    "code": "FR"
+  },
+  {
+    "value": "en_US",
+    "name": "en_US",
+  "country": "USA",
+    "code": "US"
+  },
+  {
+    "value": "es_AR",
+    "name": "es_AR",
+    "country": "Argentina",
+    "code": "AR"
+  }
+]

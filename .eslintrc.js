@@ -49,5 +49,8 @@ module.exports = {
     'jsx-a11y/anchor-is-valid': 'off',
     'react/state-in-constructor': 'off',
     'no-unused-expressions': 'off',
+    'no-useless-catch': 'off',
+    'new-cap': 'off',
+    'no-new': 'off',
   },
 };

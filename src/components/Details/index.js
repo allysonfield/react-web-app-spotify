@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Detail = ({ album, artists, name }) => (
-  <div className="offset-md-1 col-sm-4">
+  <div className="offset-md-1 col-sm-4 image">
     <div className="row col-sm-12 px-0">
       <img height="348px" src={album.images[0].url} alt={name} />
     </div>

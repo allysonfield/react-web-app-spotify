@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ThemeProvider } from 'styled-components';
 import { Switch } from '@material-ui/core';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import Dropdown from './components/Dropdown';
 import Listbox from './components/Listbox';
 import Detail from './components/Details';
@@ -14,10 +15,20 @@ import { GlobalStyles } from './globalStyles';
 import { darkTheme, lightTheme } from './themme';
 import { release } from './services/filters/release';
 import Slider from './components/Slider';
-import { filter } from './services/filters/filter';
+import { search } from './services/filters/search';
+import mock from './JSON/mock.json';
+import useShare from './Utils/useShare';
+import Console from './Utils/console';
 
+let limit = 10;
+let interval = null;
 function App() {
+  new useShare({ cod1: 'pt_BR', cod2: 'BR' });
   const [token, setToken] = useState();
+  const [country, setCountry] = useState({
+    selectedCountry: 'Brasil',
+    mock: [],
+  });
   const [genres, setGenres] = useState({
     selectedGenre: '',
     listOfGenresFromAPI: [],
@@ -31,8 +42,11 @@ function App() {
     selectedTracks: '',
     listOfTracksFromAPI: [],
   });
+  const [list, setList] = useState({ selectedList: '', listOfPlFromAPI: [] });
   const [trackDetail, setTrackDetail] = useState(null);
   const [releases, setRelease] = useState(null);
+  const [key, setKey] = useState(null);
+
   const [theme, setTheme] = useState('dark');
 
   const themeToggler = () => {
@@ -41,12 +55,12 @@ function App() {
   useEffect(() => {
     async function init() {
       await access().then(async (token) => {
-        console.log(token);
+        Console(token);
         setToken(token);
         localStorage.setItem('tk@spotify', token);
 
-        await genre(token).then(async (genreResponse) => {
-          console.log('categorias', genreResponse);
+        await genre(token, useShare.state.cod1).then(async (genreResponse) => {
+          Console('categorias', genreResponse);
           setGenres({
             selectedGenre: genres.selectedGenre,
             listOfGenresFromAPI: genreResponse.categories.items,
@@ -68,25 +82,29 @@ function App() {
                     (t) => t.id === trackResponse.items[0].id
                   );
                   setTrackDetail(trackInfo[0].track);
-                  await filter().then((filterResponse) => {
-                    console.log('filter', filterResponse.filters[1].values);
-                    setFilters(filterResponse.filters[1].values);
-                  });
-                  await release(token).then((releaseresponse) => {
-                    console.log('release', releaseresponse);
-                    setRelease(releaseresponse.playlists.items);
-                  });
-                  setInterval(async () => {
-                    await release(token).then((releaseresponse) => {
-                      console.log('release', releaseresponse);
+
+                  Console('filter', mock);
+                  setFilters(mock);
+
+                  await release(token, useShare.state.cod2).then(
+                    (releaseresponse) => {
+                      Console('release', releaseresponse);
                       setRelease(releaseresponse.playlists.items);
-                    });
+                    }
+                  );
+                  interval = setInterval(async () => {
+                    await release(token, useShare.state.cod2).then(
+                      (releaseresponse) => {
+                        Console('release', releaseresponse);
+                        setRelease(releaseresponse.playlists.items);
+                      }
+                    );
                   }, 30000);
                 }
               );
             })
             .catch((err) => {
-              console.log(err);
+              Console(err);
             });
         });
       });
@@ -122,7 +140,7 @@ function App() {
         );
       })
       .catch((err) => {
-        console.log(err);
+        Console(err);
       });
   };
 
@@ -145,7 +163,7 @@ function App() {
         setTrackDetail(trackInfo[0].track);
       })
       .catch((err) => {
-        console.log(err);
+        Console(err);
       });
   };
 
@@ -173,7 +191,7 @@ function App() {
         setTrackDetail(trackInfo[0].track);
       })
       .catch((err) => {
-        console.log(err);
+        Console(err);
       });
   };
 
@@ -181,6 +199,119 @@ function App() {
     const currentTracks = [...tracks.listOfTracksFromAPI];
     const trackInfo = currentTracks.filter((t) => t.track.id === e);
     setTrackDetail(trackInfo[0].track);
+  };
+
+  const fetchData = async () => {
+    limit += 10;
+    await search(key, limit, token)
+      .then(async (searchResponse) => {
+        if (searchResponse.playlists.items.length > 0) {
+          setList({
+            ...list,
+            listOfPlFromAPI: searchResponse.playlists.items,
+          });
+        }
+      })
+      .catch(() => {
+        limit = 10;
+      });
+  };
+
+  const changeSearch = async (e) => {
+    setKey(e);
+    Console('search', e);
+    await search(e, limit, token)
+      .then(async (searchResponse) => {
+        if (searchResponse.playlists.items.length > 0) {
+          setList({
+            selectedList: list.selectedList,
+            listOfPlFromAPI: searchResponse.playlists.items,
+          });
+        } else {
+          setList({
+            selectedList: '',
+            listOfPlFromAPI: [],
+          });
+        }
+      })
+      .catch(() => {
+        setList({
+          selectedList: '',
+          listOfPlFromAPI: [],
+        });
+      });
+  };
+
+  const selectTo = async (e) => {
+    setPlaylist({
+      selectedPlaylist: e,
+      listOfPlaylistFromAPI: list.listOfPlFromAPI,
+    });
+    await track(e, token).then((response) => {
+      setTracks({
+        selectedTracks: tracks.selectedPlaylist,
+        listOfTracksFromAPI: response.items,
+      });
+      const currentTracks = [...response.items];
+      const trackInfo = currentTracks.filter(
+        (t) => t.id === response.items[0].id
+      );
+      setTrackDetail(trackInfo[0].track);
+      setList({ selectedList: '', listOfPlFromAPI: [] });
+    });
+  };
+
+  const changedLocale = async (e) => {
+    Console('e', e);
+    setCountry({
+      selectedCountry: filters[e].country,
+      mock: filters[e],
+    });
+
+    await genre(token, filters[e].value).then(async (genreResponse) => {
+      Console('categorias', genreResponse);
+      setGenres({
+        selectedGenre: genres.selectedGenre,
+        listOfGenresFromAPI: genreResponse.categories.items,
+      });
+      await playlists(genreResponse.categories.items[0].id, token)
+        .then(async (playlistResponse) => {
+          setPlaylist({
+            selectedPlaylist: playlist.selectedPlaylist,
+            listOfPlaylistFromAPI: playlistResponse.playlists.items,
+          });
+          await track(playlistResponse.playlists.items[0].id, token).then(
+            async (trackResponse) => {
+              setTracks({
+                selectedTracks: tracks.selectedPlaylist,
+                listOfTracksFromAPI: trackResponse.items,
+              });
+              const currentTracks = [...trackResponse.items];
+              const trackInfo = currentTracks.filter(
+                (t) => t.id === trackResponse.items[0].id
+              );
+              setTrackDetail(trackInfo[0].track);
+
+              await release(token, filters[e].code).then((releaseresponse) => {
+                Console('release', releaseresponse);
+                setRelease(releaseresponse.playlists.items);
+              });
+              clearInterval(interval);
+              setInterval(async () => {
+                await release(token, filters[e].code).then(
+                  (releaseresponse) => {
+                    Console('release', releaseresponse);
+                    setRelease(releaseresponse.playlists.items);
+                  }
+                );
+              }, 30000);
+            }
+          );
+        })
+        .catch((err) => {
+          Console(err);
+        });
+    });
   };
 
   return (
@@ -199,6 +330,52 @@ function App() {
               color="primary"
             />
             <label htmlFor="">DARK MODE</label>
+            <div className="col-sm-13 form-group row px-0 ">
+              <label className="form-label col-sm-4">Search</label>
+
+              <input
+                className="form-control form-control-sm col-sm-12"
+                placeholder="Goosebumps - Remix..."
+                value={key}
+                onChange={(e) => changeSearch(e.target.value)}
+                labelId="label"
+                id="select"
+                onFocus={(e) => changeSearch(e.target.value)}
+              />
+              {list.listOfPlFromAPI.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    marginTop: '73px',
+                    zIndex: 10,
+                  }}
+                  className="col-sm-10 list-group px-0 ">
+                  <InfiniteScroll
+                    dataLength={list.listOfPlFromAPI.length} // This is important field to render the next data
+                    next={fetchData}
+                    hasMore
+                    loader={<h4>Loading...</h4>}
+                    endMessage={
+                      <p style={{ textAlign: 'center' }}>
+                        <b>Yay! You have seen it all</b>
+                      </p>
+                    }
+                    // below props only if you need pull down functionality
+                    // refreshFunction={this.refresh}
+                  >
+                    {list.listOfPlFromAPI.map((item) => (
+                      <button
+                        className="list-group-item list-group-item-action list-group-item-light"
+                        type="button"
+                        onClick={() => selectTo(item.id)}
+                        id={item.id}>
+                        {item.name}
+                      </button>
+                    ))}
+                  </InfiniteScroll>
+                </div>
+              )}
+            </div>
           </div>
 
           <form onSubmit={buttonClicked}>
@@ -210,11 +387,12 @@ function App() {
                     {filters && (
                       <select
                         className="form-control form-control-sm col-sm-12"
-                        value="en_AU"
+                        value={country.selectedCountry}
                         labelId="label"
+                        onChange={(e) => changedLocale(e.target.value)}
                         id="select">
-                        {filters.map((item) => (
-                          <option value={item.value}>{item.name}</option>
+                        {filters.map((item, i) => (
+                          <option value={i}>{item.country}</option>
                         ))}
                       </select>
                     )}
