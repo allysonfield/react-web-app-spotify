@@ -60,7 +60,7 @@ function App() {
         localStorage.setItem('tk@spotify', token);
 
         await genre(token, useShare.state.cod1).then(async (genreResponse) => {
-          Console('categorias', genreResponse);
+          Console('categoriass', genreResponse);
           setGenres({
             selectedGenre: genres.selectedGenre,
             listOfGenresFromAPI: genreResponse.categories.items,
