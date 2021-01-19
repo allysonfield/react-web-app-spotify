@@ -52,5 +52,6 @@ module.exports = {
     'no-useless-catch': 'off',
     'new-cap': 'off',
     'no-new': 'off',
+    'no-undef': 'off',
   },
 };
