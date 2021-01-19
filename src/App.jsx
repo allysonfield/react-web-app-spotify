@@ -73,6 +73,7 @@ function App() {
               });
               await track(playlistResponse.playlists.items[0].id, token).then(
                 async (trackResponse) => {
+                  Console('trackResponse', trackResponse);
                   setTracks({
                     selectedTracks: tracks.selectedPlaylist,
                     listOfTracksFromAPI: trackResponse.items,
@@ -88,14 +89,14 @@ function App() {
 
                   await release(token, useShare.state.cod2).then(
                     (releaseresponse) => {
-                      Console('release', releaseresponse);
+                      // Console('release', releaseresponse);
                       setRelease(releaseresponse.playlists.items);
                     }
                   );
                   interval = setInterval(async () => {
                     await release(token, useShare.state.cod2).then(
                       (releaseresponse) => {
-                        Console('release', releaseresponse);
+                        // Console('release', releaseresponse);
                         setRelease(releaseresponse.playlists.items);
                       }
                     );
